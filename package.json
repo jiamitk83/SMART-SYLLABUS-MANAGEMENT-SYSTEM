@@ -1,0 +1,14 @@
+{
+  "name": "ssms",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "dev:api": "pnpm --filter @ssms/api dev",
+    "dev:web": "pnpm --filter @ssms/web dev",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "bootstrap:admin": "pnpm --filter @ssms/api bootstrap:admin"
+  }
+}
