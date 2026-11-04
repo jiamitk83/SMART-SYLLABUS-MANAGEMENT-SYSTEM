@@ -20,6 +20,13 @@ import { NotificationsPage } from '@/pages/NotificationsPage';
 import { AuditPage } from '@/pages/AuditPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { ProfilePage } from '@/pages/ProfilePage';
+import { MarkAttendancePage } from '@/pages/attendance/MarkAttendancePage';
+import { DailyRegisterPage } from '@/pages/attendance/DailyRegisterPage';
+import { MonthlyRegisterPage } from '@/pages/attendance/MonthlyRegisterPage';
+import { StudentAttendancePage } from '@/pages/attendance/StudentAttendancePage';
+import { AttendanceDashboardPage, ClassAttendancePage } from '@/pages/attendance/ClassDashboardPages';
+import { AttendanceReportsPage, AttendanceHistoryPage, HolidaysPage } from '@/pages/attendance/ReportsHolidaysHistoryPages';
+import { AttendanceSettingsPage, StudentsPage } from '@/pages/attendance/SettingsStudentsPages';
 
 export function Guard({ perm, children }: { perm?: Permission; children: JSX.Element }) {
   const { user, ready, can } = useAuth();
@@ -46,6 +53,17 @@ export function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/" element={<Guard perm="dashboard:read"><DashboardPage /></Guard>} />
         <Route path="/progress" element={<Guard perm="dashboard:read"><ProgressPage /></Guard>} />
+        <Route path="/attendance" element={<Guard perm="attendance:read"><AttendanceDashboardPage /></Guard>} />
+        <Route path="/attendance/mark" element={<Guard perm="attendance:mark"><MarkAttendancePage /></Guard>} />
+        <Route path="/attendance/daily" element={<Guard perm="attendance:read"><DailyRegisterPage /></Guard>} />
+        <Route path="/attendance/monthly" element={<Guard perm="attendance:read"><MonthlyRegisterPage /></Guard>} />
+        <Route path="/attendance/student" element={<Guard perm="attendance:read"><StudentAttendancePage /></Guard>} />
+        <Route path="/attendance/class" element={<Guard perm="attendance:read"><ClassAttendancePage /></Guard>} />
+        <Route path="/attendance/reports" element={<Guard perm="attendance:read"><AttendanceReportsPage /></Guard>} />
+        <Route path="/attendance/holidays" element={<Guard perm="attendance:read"><HolidaysPage /></Guard>} />
+        <Route path="/attendance/history" element={<Guard perm="attendance:read"><AttendanceHistoryPage /></Guard>} />
+        <Route path="/attendance/settings" element={<Guard perm="attendance:manage"><AttendanceSettingsPage /></Guard>} />
+        <Route path="/attendance/students" element={<Guard perm="attendance:manage"><StudentsPage /></Guard>} />
         <Route path="/users" element={<Guard perm="users:manage"><UsersPage /></Guard>} />
         <Route path="/roles" element={<Guard perm="roles:manage"><RolesPage /></Guard>} />
         <Route path="/academic" element={<Guard perm="academic:read"><AcademicPage /></Guard>} />
