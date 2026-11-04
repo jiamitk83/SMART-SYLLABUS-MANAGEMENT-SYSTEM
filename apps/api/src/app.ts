@@ -6,6 +6,7 @@ import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { academicRoutes } from './modules/academic/academic.routes';
 import { assessmentRoutes } from './modules/assessments/assessments.routes';
+import { attendanceReportRoutes } from './modules/attendance/attendance.reports';
 import { attendanceRoutes } from './modules/attendance/attendance.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { notificationRoutes } from './modules/notifications/notifications.routes';
@@ -39,6 +40,7 @@ export function createApp(): Express {
     dashboardRoutes(),
     reportRoutes(),
     attendanceRoutes(),
+    attendanceReportRoutes(),
   ]) {
     app.use('/api', router);
   }

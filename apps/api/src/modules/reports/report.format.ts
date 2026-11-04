@@ -58,12 +58,23 @@ function toPdf(t: ReportTable): Promise<Buffer> {
   });
 }
 
-export async function sendReport(res: Response, t: ReportTable, format: 'json' | 'xlsx' | 'pdf', name: string): Promise<void> {
+export function toCsv(t: ReportTable): string {
+  const esc = (v: string | number): string => `"${String(safeCell(v)).replace(/"/g, '""')}"`;
+  return `\uFEFF${[t.columns, ...t.rows].map((row) => row.map(esc).join(',')).join('\r\n')}\r\n`;
+}
+
+export async function sendReport(res: Response, t: ReportTable, format: 'json' | 'xlsx' | 'pdf' | 'csv', name: string): Promise<void> {
   if (format === 'json') {
     res.json({ data: t });
     return;
   }
   const stamp = new Date().toISOString().slice(0, 10);
+  if (format === 'csv') {
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${name}-${stamp}.csv"`);
+    res.send(toCsv(t));
+    return;
+  }
   if (format === 'xlsx') {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${name}-${stamp}.xlsx"`);
