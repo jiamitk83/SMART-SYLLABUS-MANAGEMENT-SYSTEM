@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ACTIVITY_STATUSES,
+  ACTIVITY_TYPES,
+  activityStatusOf,
+  statusToInput,
+  type ActivityStatus,
   aggregatePlannedProgress,
   aggregateProgress,
   calculateChapterProgress,
@@ -146,3 +151,41 @@ describe('planned progress and summary', () => {
     expect(s.completed).toBe(0);
   });
 });
+
+    describe('activity statuses', () => {
+      it('maps statuses to calculation inputs and back', () => {
+        expect(statusToInput('COMPLETED')).toEqual({ applicable: true, percent: 100 });
+        expect(statusToInput('PENDING')).toEqual({ applicable: true, percent: 0 });
+        expect(statusToInput('NOT_APPLICABLE').applicable).toBe(false);
+        expect(activityStatusOf({ applicable: true, percent: 100 })).toBe('COMPLETED');
+        expect(activityStatusOf({ applicable: true, percent: 0 })).toBe('PENDING');
+        expect(activityStatusOf({ applicable: false, percent: 80 })).toBe('NOT_APPLICABLE');
+        expect(activityStatusOf(undefined)).toBe('NOT_APPLICABLE');
+      });
+      it('shows legacy partial percentages as PARTIAL, never Completed', () => {
+        for (const p of [1, 25, 50, 99.5]) expect(activityStatusOf({ applicable: true, percent: p })).toBe('PARTIAL');
+      });
+      it('matches an independent weighted calculation for every status combination (3^5 x teaching 50%)', () => {
+        const others = ACTIVITY_TYPES.filter((t) => t !== 'TEACHING');
+        const total = ACTIVITY_STATUSES.length ** others.length;
+        for (let n = 0; n < total; n++) {
+          const combo: Record<string, ActivityStatus> = {};
+          let k = n;
+          for (const t of others) { combo[t] = ACTIVITY_STATUSES[k % 3]!; k = Math.floor(k / 3); }
+          const input: Record<string, { applicable: boolean; percent: number }> = { TEACHING: { applicable: true, percent: 50 } };
+          let weight = 40;
+          let earned = 40 * 50;
+          for (const t of others) {
+            input[t] = statusToInput(combo[t]!);
+            if (combo[t] === 'NOT_APPLICABLE') continue;
+            weight += DEFAULT_ACTIVITY_WEIGHTS[t];
+            if (combo[t] === 'COMPLETED') earned += DEFAULT_ACTIVITY_WEIGHTS[t] * 100;
+          }
+          expect(calculateChapterProgress(input)).toBeCloseTo(earned / weight, 1);
+        }
+      });
+      it('N/A for every non-teaching activity leaves teaching alone', () => {
+        const input = { TEACHING: { applicable: true, percent: 50 }, ...Object.fromEntries(ACTIVITY_TYPES.filter((t) => t !== 'TEACHING').map((t) => [t, statusToInput('NOT_APPLICABLE')])) };
+        expect(calculateChapterProgress(input)).toBe(50);
+      });
+    });

@@ -1,9 +1,9 @@
 import { Router, type Request } from 'express';
 import { z } from 'zod';
-import { ACTIVITY_TYPES, DEFAULT_ACTIVITY_WEIGHTS, ProgressError, validateWeights } from '@ssms/shared';
+import { ACTIVITY_STATUSES, ACTIVITY_TYPES, CORRECTION_REASON_MIN_LENGTH, DEFAULT_ACTIVITY_WEIGHTS, ProgressError, activityStatusOf, statusToInput, validateWeights } from '@ssms/shared';
 import { authenticate, authorize } from '../../middleware/auth.middleware';
 import { validate } from '../../middleware/error.middleware';
-import { ChapterModel, SectionModel, TeacherAssignmentModel } from '../../models/academic.models';
+import { ChapterModel, SectionModel, TeacherAssignmentModel, TopicModel } from '../../models/academic.models';
 import { ActivityModel, CompletionModel, SettingModel, TeachingRecordModel } from '../../models/planning.models';
 import { asyncHandler, badRequest, conflict, notFound } from '../../utils/errors';
 import { audit } from '../audit/audit.service';
@@ -42,9 +42,9 @@ const activityBody = z.object({
   section: objectId,
   chapter: objectId,
   activityType: z.enum(ACTIVITY_TYPES),
-  applicable: z.boolean().default(true),
-  percent: z.number().min(0).max(100).default(0),
+  status: z.enum(ACTIVITY_STATUSES),
   notes: z.string().max(1000).optional(),
+  reason: z.string().trim().min(CORRECTION_REASON_MIN_LENGTH, `A correction reason of at least ${CORRECTION_REASON_MIN_LENGTH} characters is required`).max(500),
 });
 
 const completionBody = z.object({ section: objectId, chapter: objectId, remarks: z.string().max(1000).optional(), direct: z.boolean().optional() });
@@ -111,7 +111,7 @@ export function progressRoutes(): Router {
 
   r.put(
     '/activities',
-    authorize('teaching:write'),
+    authorize('activities:manage'),
     validate({ body: activityBody }),
     asyncHandler(async (req, res) => {
       const b = req.body as z.infer<typeof activityBody>;
@@ -120,17 +120,76 @@ export function progressRoutes(): Router {
       if (!section || !chapter) throw notFound('Section or chapter not found');
       await assertHierarchy({ academicSession: String(section.academicSession), class: String(section.class), section: b.section, subject: String(chapter.subject), chapter: b.chapter });
       await authorizeWrite(req, b.section, String(chapter.subject));
-      const percent = b.applicable ? b.percent : 0;
+      if (b.activityType === 'TEACHING' && (await TopicModel.exists({ chapter: b.chapter, isActive: true }))) {
+        throw badRequest('Teaching progress is calculated from submitted daily teaching records for this chapter and cannot be corrected here');
+      }
+      const { applicable, percent } = statusToInput(b.status);
+      const filter = { section: b.section, chapter: b.chapter, activityType: b.activityType };
+      const existing = await ActivityModel.findOne(filter).select('applicable percent').lean();
+      const previous = { applicable: existing ? existing.applicable : true, percent: existing ? existing.percent : 0 };
+      const previousStatus = activityStatusOf(previous);
+      if (previous.applicable === applicable && previous.percent === percent) throw badRequest('The new status is identical to the current status; nothing to correct');
+      const entry = {
+        at: new Date(),
+        by: req.user!.id,
+        kind: 'CORRECTION',
+        activityType: b.activityType,
+        class: section.class,
+        section: section._id,
+        subject: chapter.subject,
+        chapter: chapter._id,
+        previousApplicable: previous.applicable,
+        previousPercent: previous.percent,
+        previousStatus,
+        applicable,
+        percent,
+        status: b.status,
+        reason: b.reason,
+      };
       const doc = await ActivityModel.findOneAndUpdate(
-        { section: b.section, chapter: b.chapter, activityType: b.activityType },
+        filter,
         {
-          $set: { academicSession: section.academicSession, class: section.class, subject: chapter.subject, applicable: b.applicable, percent, notes: b.notes ?? '', updatedBy: req.user!.id },
-          $push: { history: { by: req.user!.id, applicable: b.applicable, percent } },
+          $set: { academicSession: section.academicSession, class: section.class, subject: chapter.subject, applicable, percent, notes: b.notes ?? '', updatedBy: req.user!.id, source: 'MANUAL' },
+          $push: { history: entry },
         },
         { upsert: true, new: true, runValidators: true },
       ).lean();
-      await audit(req, { action: 'ACTIVITY_RECORDED', entityType: 'ActivityRecord', entityId: String(doc._id), academicSession: String(section.academicSession), details: { type: b.activityType, applicable: b.applicable, percent } });
+      await audit(req, {
+        action: 'ACTIVITY_CORRECTED',
+        entityType: 'ActivityRecord',
+        entityId: String(doc._id),
+        academicSession: String(section.academicSession),
+        details: {
+          activityType: b.activityType,
+          class: String(section.class),
+          section: b.section,
+          subject: String(chapter.subject),
+          chapter: b.chapter,
+          chapterTitle: chapter.title,
+          previous: { ...previous, status: previousStatus },
+          next: { applicable, percent, status: b.status },
+          reason: b.reason,
+        },
+      });
       res.json({ data: doc });
+    }),
+  );
+
+  // Append-only correction history for one section's chapter (teachers: assigned classes only).
+  r.get(
+    '/activities/history',
+    authorize('dashboard:read'),
+    validate({ query: z.object({ section: objectId, chapter: objectId }) }),
+    asyncHandler(async (req, res) => {
+      const q = req.query as { section: string; chapter: string };
+      const chapter = await ChapterModel.findById(q.chapter).select('subject').lean();
+      if (!chapter) throw notFound('Chapter not found');
+      await authorizeWrite(req, q.section, String(chapter.subject));
+      const docs = await ActivityModel.find({ section: q.section, chapter: q.chapter }).populate('history.by', 'fullName').lean();
+      const data = docs
+        .flatMap((d) => d.history.map((h) => ({ ...h, activityType: h.activityType ?? d.activityType })))
+        .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+      res.json({ data });
     }),
   );
 

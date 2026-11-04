@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsup src/server.ts src/scripts/bootstrap-admin.ts --format esm --target node20 --clean --noExternal @ssms/shared",
+    "build": "tsup",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "bootstrap:admin": "tsx src/scripts/bootstrap-admin.ts",
-    "backup": "tsx src/scripts/backup.ts"
+    "backup": "tsx src/scripts/backup.ts",
+    "migrate:activities-permission": "tsx src/scripts/migrate-activities-permission.ts"
   },
   "dependencies": {
     "@ssms/shared": "workspace:*",

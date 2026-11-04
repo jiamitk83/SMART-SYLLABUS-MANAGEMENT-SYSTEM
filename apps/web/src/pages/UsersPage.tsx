@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { ROLES } from '@ssms/shared';
+import { PERMISSION_DESCRIPTIONS, ROLES, type Permission } from '@ssms/shared';
 import { Alert, Badge, Button, Card, DataTable, Field, Input, Modal, PageHeader, Pagination, Select, Spinner } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api';
 import { useList, type UserRow } from '@/lib/hooks';
@@ -142,7 +142,7 @@ export function RolesPage() {
                 {data.allPermissions.map((p) => (
                   <label key={p} className="flex items-center gap-2">
                     <input type="checkbox" checked={current.includes(p)} onChange={(e) => setEdits((s) => ({ ...s, [r]: e.target.checked ? [...current, p] : current.filter((x) => x !== p) }))} />
-                    {p}
+                    <span title={PERMISSION_DESCRIPTIONS[p as Permission]}>{p}</span>
                   </label>
                 ))}
               </div>

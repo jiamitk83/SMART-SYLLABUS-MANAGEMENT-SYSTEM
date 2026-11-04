@@ -71,11 +71,37 @@ async function syncActivities(
   userId: string,
 ): Promise<void> {
   for (const chapter of a.chapters) {
+    // $setOnInsert only: an existing record (including a manual correction) is never overwritten.
     await ActivityModel.updateOne(
       { section: a.section, chapter, activityType: a.type },
       {
-        $set: { academicSession: a.academicSession, class: a.class, subject: a.subject, applicable: true, percent: 100, notes: 'Recorded via assessment', updatedBy: userId },
-        $push: { history: { by: userId, applicable: true, percent: 100 } },
+        $setOnInsert: {
+          academicSession: a.academicSession,
+          class: a.class,
+          subject: a.subject,
+          applicable: true,
+          percent: 100,
+          notes: 'Recorded via assessment',
+          source: 'ASSESSMENT',
+          updatedBy: userId,
+          history: [
+            {
+              at: new Date(),
+              by: userId,
+              kind: 'ASSESSMENT_SYNC',
+              activityType: a.type,
+              class: a.class,
+              section: a.section,
+              subject: a.subject,
+              chapter,
+              previousApplicable: true,
+              previousPercent: 0,
+              applicable: true,
+              percent: 100,
+              reason: 'Automatic: assessment conducted',
+            },
+          ],
+        },
       },
       { upsert: true },
     );

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { TEACHING_STATUSES } from '@ssms/shared';
 import { authenticate, authorize } from '../../middleware/auth.middleware';
 import { validate } from '../../middleware/error.middleware';
-import { AcademicSessionModel, SectionModel } from '../../models/academic.models';
+import { AcademicSessionModel, SectionModel, TeacherAssignmentModel } from '../../models/academic.models';
 import { TeachingRecordModel } from '../../models/planning.models';
 import { UserModel } from '../../models/auth.models';
 import { asyncHandler, badRequest, forbidden, notFound } from '../../utils/errors';
@@ -75,7 +75,7 @@ async function assertDateInSession(date: Date, sessionId: string): Promise<void>
 async function loadEditable(req: Request) {
   const rec = await TeachingRecordModel.findById(idParam.parse(req.params).id);
   if (!rec) throw notFound();
-  const isOwner = String(rec.teacher) === req.user!.id;
+  const isOwner = String(rec.teacher) === req.user!.id || String(rec.createdBy ?? '') === req.user!.id;
   if (!isOwner && !(req.user!.role === 'SUPER_ADMIN')) throw forbidden('You can only modify your own teaching records');
   return rec;
 }
@@ -137,24 +137,44 @@ export function teachingRoutes(): Router {
       const academicSession = String(section.academicSession);
       await assertHierarchy({ academicSession, class: String(section.class), section: b.section, subject: b.subject, chapter: b.chapter, topic: b.topic, subtopic: b.subtopic });
       await assertDateInSession(b.date, academicSession);
-      let teacher = req.user!.id;
-      if (req.user!.role !== 'TEACHER' && b.teacher) {
+      const actor = req.user!.id;
+      let teacher = actor;
+      let unassignedAdminEntry = false;
+      if (req.user!.role === 'TEACHER') {
+        // Teachers can only record their own teaching; any supplied teacher is ignored.
+        await assertTeacherAssigned(teacher, b.section, b.subject);
+      } else if (b.teacher) {
         const t = await UserModel.findById(b.teacher).lean();
-        if (!t || t.role !== 'TEACHER') throw badRequest('Teacher not found');
+        if (!t || t.role !== 'TEACHER' || !t.isActive) throw badRequest('Teacher not found');
+        await assertTeacherAssigned(b.teacher, b.section, b.subject);
         teacher = b.teacher;
+      } else {
+        const assigned = await TeacherAssignmentModel.find({ academicSession, section: b.section, subject: b.subject, isActive: true }).lean();
+        if (assigned.length === 1) teacher = String(assigned[0]!.teacher);
+        else if (assigned.length > 1) throw badRequest('Several teachers are assigned to this section and subject; select the teacher');
+        else if (req.user!.role === 'SUPER_ADMIN') unassignedAdminEntry = true;
+        else throw badRequest('No teacher is assigned to this section and subject');
       }
-      await assertTeacherAssigned(teacher, b.section, b.subject);
+      const onBehalf = teacher !== actor;
       const { submit, teacher: _t, ...fields } = b;
       const doc = await TeachingRecordModel.create({
         ...fields,
         academicSession,
         class: section.class,
         teacher,
+        createdBy: actor,
+        enteredOnBehalf: onBehalf,
         state: submit ? 'SUBMITTED' : 'DRAFT',
         submittedAt: submit ? new Date() : undefined,
-        history: [{ by: req.user!.id, action: submit ? 'CREATED_AND_SUBMITTED' : 'CREATED_DRAFT' }],
+        history: [{ by: actor, action: submit ? 'CREATED_AND_SUBMITTED' : 'CREATED_DRAFT', changes: { teacher, onBehalf, unassignedAdminEntry } }],
       });
-      await audit(req, { action: 'TEACHING_RECORD_CREATED', entityType: 'DailyTeachingRecord', entityId: String(doc._id), academicSession, details: { state: doc.state, chapter: b.chapter } });
+      await audit(req, {
+        action: 'TEACHING_RECORD_CREATED',
+        entityType: 'DailyTeachingRecord',
+        entityId: String(doc._id),
+        academicSession,
+        details: { state: doc.state, chapter: b.chapter, createdBy: actor, teachingTeacher: teacher, onBehalf, unassignedAdminEntry },
+      });
       res.status(201).json({ data: doc.toObject() });
     }),
   );

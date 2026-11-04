@@ -10,6 +10,31 @@ export interface ActivityInput {
 
 export type ChapterActivities = Partial<Record<ActivityType, ActivityInput>>;
 
+export const ACTIVITY_STATUSES = ['PENDING', 'COMPLETED', 'NOT_APPLICABLE'] as const;
+export type ActivityStatus = (typeof ACTIVITY_STATUSES)[number];
+/** PARTIAL only describes legacy records with a stored percentage between 0 and 100. */
+export type DisplayActivityStatus = ActivityStatus | 'PARTIAL';
+
+export const ACTIVITY_STATUS_LABEL: Record<DisplayActivityStatus, string> = {
+  PENDING: 'Pending',
+  COMPLETED: 'Completed',
+  NOT_APPLICABLE: 'N/A',
+  PARTIAL: 'Partial',
+};
+
+/** Completed = 100%, Pending = 0%, N/A = excluded from the weighted calculation. */
+export function statusToInput(status: ActivityStatus): ActivityInput {
+  if (status === 'NOT_APPLICABLE') return { applicable: false, percent: 0 };
+  return { applicable: true, percent: status === 'COMPLETED' ? 100 : 0 };
+}
+
+export function activityStatusOf(input: { applicable?: boolean; percent?: number } | undefined | null): DisplayActivityStatus {
+  if (!input || input.applicable === false) return 'NOT_APPLICABLE';
+  const p = clampPercent(input.percent ?? 0);
+  if (p >= 100) return 'COMPLETED';
+  return p <= 0 ? 'PENDING' : 'PARTIAL';
+}
+
 export class ProgressError extends Error {}
 
 const EPS = 1e-9;

@@ -14,6 +14,7 @@ export const PERMISSIONS = [
   'plans:manage',
   'teaching:read:all',
   'teaching:write',
+  'activities:manage',
   'completion:record',
   'completion:approve',
   'assessments:read',
@@ -24,6 +25,15 @@ export const PERMISSIONS = [
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
+export const PERMISSION_DESCRIPTIONS: Partial<Record<Permission, string>> = {
+  'teaching:write': 'Create, edit and submit own daily teaching records',
+  'activities:manage': 'Correct activity percentages (with a mandatory reason). Teachers: assigned classes only',
+  'completion:approve': 'Approve, reject and reopen chapter completions',
+  'dashboard:read': 'View progress and dashboards (Teachers: assigned classes only)',
+};
+
+export const CORRECTION_REASON_MIN_LENGTH = 5;
+
 const ALL: readonly Permission[] = PERMISSIONS;
 
 export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
@@ -33,6 +43,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'syllabus:read',
     'plans:read',
     'teaching:read:all',
+    'activities:manage',
     'completion:approve',
     'assessments:read',
     'reports:read',
@@ -47,6 +58,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'plans:read',
     'plans:manage',
     'teaching:read:all',
+    'activities:manage',
     'completion:approve',
     'assessments:read',
     'assessments:manage',
@@ -59,6 +71,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'syllabus:read',
     'plans:read',
     'teaching:write',
+    'activities:manage',
     'completion:record',
     'assessments:read',
     'assessments:manage',

@@ -4,7 +4,8 @@ import { TEACHING_STATUSES } from '@ssms/shared';
 import { ChapterPickerFields, useChapterPicker } from '@/components/ChapterPicker';
 import { Alert, Badge, Button, Card, DataTable, Field, Input, PageHeader, Pagination, Select, Spinner, Textarea } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api';
-import { labelOf, useList } from '@/lib/hooks';
+import { labelOf, idOf, useList } from '@/lib/hooks';
+import { useAuth } from '@/store/auth';
 import { fmtDate, toInputDate } from '@/lib/utils';
 
 interface Rec {
@@ -16,7 +17,10 @@ const today = () => toInputDate(new Date());
 
 export function TeachingPage() {
   const qc = useQueryClient();
-  const p = useChapterPicker({ restrictToAssignments: true });
+  const p = useChapterPicker({ restrictToAssignments: useAuth.getState().user?.role === 'TEACHER' });
+  const canChooseTeacher = !p.scope.isTeacher;
+  const [teacherId, setTeacherId] = useState('');
+  const teacherOptions = p.scope.assignments.filter((a) => idOf(a.section) === p.section && idOf(a.subject) === p.subject);
   const [date, setDate] = useState(today());
   const [period, setPeriod] = useState('1');
   const [topic, setTopic] = useState('');
@@ -35,7 +39,7 @@ export function TeachingPage() {
 
   const save = useMutation({
     mutationFn: (submit: boolean) =>
-      api.post('/teaching-records', { date, section: p.section, subject: p.subject, chapter: p.chapter, topic: topic || undefined, subtopic: subtopic || undefined, periodNumber: Number(period), description, teachingStatus: status, remarks, submit }),
+      api.post('/teaching-records', { date, section: p.section, subject: p.subject, chapter: p.chapter, topic: topic || undefined, subtopic: subtopic || undefined, periodNumber: Number(period), description, teachingStatus: status, remarks, submit, teacher: canChooseTeacher && teacherId ? teacherId : undefined }),
     onSuccess: (_r, submit) => {
       setMsg(submit ? 'Teaching entry submitted.' : 'Draft saved.');
       setDescription('');
@@ -43,11 +47,12 @@ export function TeachingPage() {
       setPeriod(String(Number(period) + 1));
       void qc.invalidateQueries({ queryKey: ['teaching'] });
       void qc.invalidateQueries({ queryKey: ['dashboard'] });
+      void qc.invalidateQueries({ queryKey: ['progress'] });
     },
   });
   const act = useMutation({
     mutationFn: ({ id, kind }: { id: string; kind: 'submit' | 'delete' }) => (kind === 'submit' ? api.post(`/teaching-records/${id}/submit`) : api.delete(`/teaching-records/${id}`)),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['teaching'] }); void qc.invalidateQueries({ queryKey: ['dashboard'] }); },
+    onSuccess: () => { void qc.invalidateQueries({ queryKey: ['teaching'] }); void qc.invalidateQueries({ queryKey: ['dashboard'] }); void qc.invalidateQueries({ queryKey: ['progress'] }); },
   });
 
   return (
@@ -62,6 +67,14 @@ export function TeachingPage() {
           <Field label="Status"><Select value={status} onChange={(e) => setStatus(e.target.value)}>{TEACHING_STATUSES.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}</Select></Field>
         </div>
         <div className="grid gap-3 md:grid-cols-3"><ChapterPickerFields p={p} /></div>
+        {canChooseTeacher && (
+          <Field label="Teaching teacher (entering on their behalf)">
+            <Select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} aria-label="Teaching teacher" disabled={!p.subject}>
+              <option value="">Auto (assigned teacher){teacherOptions.length === 0 ? ' — none assigned' : ''}</option>
+              {teacherOptions.map((a) => <option key={idOf(a.teacher)} value={idOf(a.teacher)}>{labelOf(a.teacher)}</option>)}
+            </Select>
+          </Field>
+        )}
         {p.scope.isTeacher && p.sectionOptions.length === 0 && <Alert tone="amber">You have no class/subject assignments in the current session. Ask the coordinator to assign you.</Alert>}
         <div className="grid gap-3 md:grid-cols-2">
           <Select value={topic} onChange={(e) => { setTopic(e.target.value); setSubtopic(''); }} aria-label="Topic" disabled={!p.chapter}><option value="">Topic (optional)…</option>{topics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}</Select>

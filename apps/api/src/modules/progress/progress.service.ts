@@ -96,7 +96,7 @@ export async function computeUnits(f: UnitFilter): Promise<ProgressUnit[]> {
 
   const [topics, records, activities, completions, plans] = await Promise.all([
     TopicModel.find({ chapter: { $in: chapterIds }, isActive: true }).lean(),
-    TeachingRecordModel.find({ academicSession: f.academicSession, section: { $in: sectionIds }, chapter: { $in: chapterIds }, state: 'SUBMITTED', topic: { $exists: true } })
+    TeachingRecordModel.find({ academicSession: f.academicSession, section: { $in: sectionIds }, chapter: { $in: chapterIds }, state: 'SUBMITTED' })
       .select('section chapter topic teachingStatus')
       .lean(),
     ActivityModel.find({ academicSession: f.academicSession, section: { $in: sectionIds }, chapter: { $in: chapterIds } }).lean(),
@@ -110,9 +110,11 @@ export async function computeUnits(f: UnitFilter): Promise<ProgressUnit[]> {
     topicsByChapter.set(k, [...(topicsByChapter.get(k) ?? []), t]);
   }
   const statusByTopic = new Map<string, TeachingStatus[]>();
+  const statusByChapter = new Map<string, TeachingStatus[]>();
   for (const rec of records) {
-    const k = key(rec.section, rec.topic);
-    statusByTopic.set(k, [...(statusByTopic.get(k) ?? []), rec.teachingStatus as TeachingStatus]);
+    const target = rec.topic ? statusByTopic : statusByChapter;
+    const k = rec.topic ? key(rec.section, rec.topic) : key(rec.section, rec.chapter);
+    target.set(k, [...(target.get(k) ?? []), rec.teachingStatus as TeachingStatus]);
   }
   const activityMap = new Map(activities.map((a) => [key(a.section, a.chapter, a.activityType), a]));
   const completionMap = new Map(completions.map((c) => [key(c.section, c.chapter), c]));
@@ -126,15 +128,18 @@ export async function computeUnits(f: UnitFilter): Promise<ProgressUnit[]> {
       if (String(ch.class) !== ss.class || String(ch.subject) !== ss.subject) continue;
       const chTopics = topicsByChapter.get(String(ch._id)) ?? [];
       let teachingPercent: number;
+      // Chapter-level entries (no topic) describe the chapter as a whole. They never add to topic-level
+      // progress: the chapter's teaching is the higher of the two, so the same work is not counted twice.
+      const chapterLevel = calculateTopicProgress(statusByChapter.get(key(ss.section, ch._id)) ?? []);
       if (chTopics.length) {
         const totalW = chTopics.reduce((s, t) => s + (t.estimatedPeriods > 0 ? t.estimatedPeriods : 1), 0);
         const earned = chTopics.reduce(
           (s, t) => s + (t.estimatedPeriods > 0 ? t.estimatedPeriods : 1) * calculateTopicProgress(statusByTopic.get(key(ss.section, t._id)) ?? []),
           0,
         );
-        teachingPercent = totalW > 0 ? earned / totalW : 0;
+        teachingPercent = Math.max(totalW > 0 ? earned / totalW : 0, chapterLevel);
       } else {
-        teachingPercent = activityMap.get(key(ss.section, ch._id, 'TEACHING'))?.percent ?? 0;
+        teachingPercent = Math.max(activityMap.get(key(ss.section, ch._id, 'TEACHING'))?.percent ?? 0, chapterLevel);
       }
 
       const chapterActivities: ChapterActivities = {};
