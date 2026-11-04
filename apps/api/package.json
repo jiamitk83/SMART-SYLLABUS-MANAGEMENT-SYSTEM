@@ -11,7 +11,8 @@
     "test": "vitest run",
     "bootstrap:admin": "tsx src/scripts/bootstrap-admin.ts",
     "backup": "tsx src/scripts/backup.ts",
-    "migrate:activities-permission": "tsx src/scripts/migrate-activities-permission.ts"
+    "migrate:activities-permission": "tsx src/scripts/migrate-activities-permission.ts",
+    "migrate:attendance-permissions": "tsx src/scripts/migrate-attendance-permissions.ts"
   },
   "dependencies": {
     "@ssms/shared": "workspace:*",

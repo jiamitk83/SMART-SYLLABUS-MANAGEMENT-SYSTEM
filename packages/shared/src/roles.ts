@@ -22,6 +22,11 @@ export const PERMISSIONS = [
   'reports:read',
   'dashboard:read',
   'notifications:manage',
+  'attendance:read',
+  'attendance:mark',
+  'attendance:correct',
+  'attendance:lock',
+  'attendance:manage',
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -30,6 +35,11 @@ export const PERMISSION_DESCRIPTIONS: Partial<Record<Permission, string>> = {
   'activities:manage': 'Correct activity percentages (with a mandatory reason). Teachers: assigned classes only',
   'completion:approve': 'Approve, reject and reopen chapter completions',
   'dashboard:read': 'View progress and dashboards (Teachers: assigned classes only)',
+  'attendance:read': 'View attendance, registers and reports (Teachers: assigned sections only)',
+  'attendance:mark': 'Mark and update attendance (Teachers: assigned sections only)',
+  'attendance:correct': 'Mark or correct attendance for any class/section (reason required)',
+  'attendance:lock': 'Lock and unlock attendance registers (unlock requires a reason)',
+  'attendance:manage': 'Manage students, holidays and attendance settings',
 };
 
 export const CORRECTION_REASON_MIN_LENGTH = 5;
@@ -50,6 +60,10 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'dashboard:read',
     'audit:read',
     'notifications:manage',
+    'attendance:read',
+    'attendance:correct',
+    'attendance:lock',
+    'attendance:manage',
   ],
   ACADEMIC_COORDINATOR: [
     'academic:read',
@@ -65,6 +79,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'reports:read',
     'dashboard:read',
     'notifications:manage',
+    'attendance:read',
   ],
   TEACHER: [
     'academic:read',
@@ -77,6 +92,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
     'assessments:manage',
     'reports:read',
     'dashboard:read',
+    'attendance:read',
+    'attendance:mark',
   ],
 };
 
