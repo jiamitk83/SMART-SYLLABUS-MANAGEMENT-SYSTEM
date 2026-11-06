@@ -46,3 +46,6 @@ Topic and subtopic are optional end to end (form, API schemas, model); a subtopi
 - Reminders are generated on demand (`Generate reminders`), not by a scheduler.
 - UI components are hand-written shadcn-style, not the shadcn CLI.
 - Bundle is a single chunk; route-level code splitting is a possible improvement.
+
+## Attendance module
+Implemented (students, mark/daily/monthly registers, reports and PDF/Excel/CSV, holidays, history, lock/unlock, settings, RBAC). Details: [ATTENDANCE_IMPLEMENTATION_STATUS.md](ATTENDANCE_IMPLEMENTATION_STATUS.md), [ATTENDANCE_MODULE_AUDIT.md](ATTENDANCE_MODULE_AUDIT.md). Existing databases need `migrate:attendance-permissions` after a backup.

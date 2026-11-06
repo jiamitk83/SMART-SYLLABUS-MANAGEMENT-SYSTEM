@@ -32,7 +32,6 @@ export function Guard({ perm, children }: { perm?: Permission; children: JSX.Ele
   const { user, ready, can } = useAuth();
   if (!ready) return <Spinner />;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.mustChangePassword) return <Navigate to="/profile" replace state={{ forced: true }} />;
   if (perm && !can(perm)) return <Navigate to="/" replace />;
   return children;
 }

@@ -8,7 +8,9 @@
     "noImplicitOverride": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "noEmit": true,
+    "noEmit": false,
+    "outDir": "dist",
+    "declaration": true,
     "isolatedModules": true,
     "lib": ["ES2022"]
   },

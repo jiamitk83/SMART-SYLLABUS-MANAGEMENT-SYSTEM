@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "start": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "preview": "vite preview"
@@ -23,6 +24,7 @@
     "react-router-dom": "^7.18.5",
     "recharts": "^3.10.1",
     "tailwind-merge": "^3.7.0",
+    "tsx": "^4.23.15",
     "zod": "^3.25.76",
     "zustand": "^5.0.16"
   },

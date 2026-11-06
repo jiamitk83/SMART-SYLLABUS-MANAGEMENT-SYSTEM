@@ -18,7 +18,7 @@ export const createUserBody = z.object({
   password: passwordSchema,
   employeeCode: z.string().trim().max(40).optional(),
   phone: z.string().trim().max(20).optional(),
-  mustChangePassword: z.boolean().default(true),
+  mustChangePassword: z.boolean().default(false),
 });
 
 export const createTeacherBody = createUserBody.omit({ role: true });

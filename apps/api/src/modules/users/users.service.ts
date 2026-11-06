@@ -82,7 +82,6 @@ export const usersService = {
     const user = await repo.findById(id);
     if (!user) throw notFound('User not found');
     user.passwordHash = await hashPassword(password);
-    user.mustChangePassword = true;
     user.passwordChangedAt = new Date();
     await user.save();
     await authService.revokeAllSessions(id, 'ADMIN_PASSWORD_RESET');

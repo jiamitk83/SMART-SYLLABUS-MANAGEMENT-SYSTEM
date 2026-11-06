@@ -19,3 +19,6 @@ Prereq: API and web running, Super Admin bootstrapped.
 13. **Audit:** admin filters by action and date.
 14b. **Optional topic/subtopic:** submit a record with only class-section, subject, chapter, status and description (no validation error for empty Topic/Subtopic; Subtopic is disabled until a Topic is chosen). Open Progress (it refreshes automatically): Teaching shows Completed = 100%, Partial = 50%, Not taught = 0% for that chapter; drafts add nothing. For a chapter with topics, mixing topic and chapter-level records shows the higher value, not the sum.
 14. **Daily teaching as SUPER_ADMIN:** open Daily teaching, pick any class-section and subject; the "Teaching teacher" selector lists the assigned teachers (Auto uses the single assigned teacher). Save a record: it shows under the teacher, while the audit log (`TEACHING_RECORD_CREATED`) and the record history show you as the creator with `onBehalf`. As a TEACHER, only assigned sections/subjects appear and an unassigned one is rejected by the API (403).
+
+## Attendance
+See [ATTENDANCE_MANUAL_TESTING.md](ATTENDANCE_MANUAL_TESTING.md).

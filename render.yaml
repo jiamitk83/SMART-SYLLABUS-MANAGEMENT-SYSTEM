@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: smart-syllabus-api
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install && pnpm --filter @ssms/shared build && pnpm --filter @ssms/api build
+    startCommand: pnpm --filter @ssms/api start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true

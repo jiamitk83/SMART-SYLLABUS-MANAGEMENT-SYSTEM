@@ -9,7 +9,7 @@ import { passwordSchema } from '../modules/auth/auth.validation';
 async function main(): Promise<void> {
   const username = (process.env.ADMIN_USERNAME ?? '').trim().toLowerCase();
   const email = (process.env.ADMIN_EMAIL ?? '').trim().toLowerCase();
-  const password = process.env.ADMIN_PASSWORD ?? '';
+  const password = process.env.ADMIN_PASSWORD?.trim() ?? '';
   const fullName = process.env.ADMIN_FULL_NAME?.trim() || 'System Administrator';
   if (!username || !email || !password) throw new Error('Set ADMIN_USERNAME, ADMIN_EMAIL and ADMIN_PASSWORD before running this script');
   const pw = passwordSchema.safeParse(password);
@@ -17,13 +17,20 @@ async function main(): Promise<void> {
 
   await connectDb();
   await ensureRoles();
-  const existing = await UserModel.exists({ role: 'SUPER_ADMIN' });
+  const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
+  const existing = await UserModel.findOne({ role: 'SUPER_ADMIN' });
   if (existing) {
-    console.log(`A Super Admin already exists in ${dbName()}; nothing changed.`);
+    existing.username = username;
+    existing.email = email;
+    existing.fullName = fullName;
+    existing.passwordHash = passwordHash;
+    existing.isActive = true;
+    existing.mustChangePassword = false;
+    await existing.save();
+    console.log(`Super Admin "${username}" updated in ${dbName()}.`);
   } else {
-    const passwordHash = await bcrypt.hash(password, env.BCRYPT_ROUNDS);
-    await UserModel.create({ username, email, fullName, role: 'SUPER_ADMIN', passwordHash, isActive: true, mustChangePassword: true });
-    console.log(`Super Admin "${username}" created in ${dbName()}. Password must be changed at first login.`);
+    await UserModel.create({ username, email, fullName, role: 'SUPER_ADMIN', passwordHash, isActive: true, mustChangePassword: false });
+    console.log(`Super Admin "${username}" created in ${dbName()}.`);
   }
   await disconnectDb();
 }
