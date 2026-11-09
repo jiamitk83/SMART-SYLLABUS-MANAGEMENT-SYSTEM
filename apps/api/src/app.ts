@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
+import path from 'node:path';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { academicRoutes } from './modules/academic/academic.routes';
@@ -43,6 +44,13 @@ export function createApp(): Express {
     attendanceReportRoutes(),
   ]) {
     app.use('/api', router);
+  }
+  if (env.isProd) {
+    const distPath = path.resolve(__dirname, '../../apps/web/dist');
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.resolve(distPath, 'index.html'));
+    });
   }
   app.use(notFoundHandler);
   app.use(errorHandler);

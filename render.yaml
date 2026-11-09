@@ -4,12 +4,18 @@ services:
     env: node
     plan: free
     rootDir: .
-    buildCommand: pnpm install && pnpm --filter @ssms/shared build && pnpm --filter @ssms/api build
+    buildCommand: pnpm install && pnpm --filter @ssms/shared build && pnpm --filter @ssms/api build && pnpm --filter @ssms/web build
     startCommand: pnpm --filter @ssms/api start
     envVars:
-      - key: DATABASE_URL
-        sync: false
+      - key: NODE_ENV
+        value: production
       - key: PORT
         value: 4000
-      - key: JWT_SECRET
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
         generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://ssms-kobi.onrender.com
