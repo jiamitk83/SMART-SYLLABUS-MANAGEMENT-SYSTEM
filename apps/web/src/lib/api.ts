@@ -1,7 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useAuth, type AuthUser } from '@/store/auth';
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? '/api', withCredentials: true, headers: { 'X-Requested-With': 'ssms' } });
+export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000', withCredentials: true, headers: { 'X-Requested-With': 'ssms' } });
 
 api.interceptors.request.use((config) => {
   const token = useAuth.getState().accessToken;
