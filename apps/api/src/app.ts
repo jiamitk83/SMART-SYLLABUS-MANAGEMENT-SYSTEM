@@ -50,7 +50,12 @@ export function createApp(): Express {
   ]) {
     app.use('/api', router);
   }
-  const distPath = path.resolve(__dirname, '../../apps/web/dist');
+  let distPath = path.resolve(__dirname, '../../apps/web/dist');
+
+  if (!fs.existsSync(distPath)) {
+    // Fallback for compiled production environment in Render root
+    distPath = path.resolve(__dirname, '../../../web/dist');
+  }
   if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
     app.get('/', (_req, res) => {
