@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
+import { fileURLToPath } from 'url';
 import fs from 'node:fs';
 import helmet from 'helmet';
 import path from 'node:path';
@@ -18,6 +19,9 @@ import { dashboardRoutes, reportRoutes } from './modules/reports/reports.routes'
 import { syllabusRoutes } from './modules/syllabus/syllabus.routes';
 import { teachingRoutes } from './modules/teaching/teaching.routes';
 import { usersRoutes } from './modules/users/users.routes';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function createApp(): Express {
   const app = express();
