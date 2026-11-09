@@ -1,7 +1,6 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
-import { fileURLToPath } from 'url';
 import fs from 'node:fs';
 import helmet from 'helmet';
 import path from 'node:path';
@@ -19,9 +18,6 @@ import { dashboardRoutes, reportRoutes } from './modules/reports/reports.routes'
 import { syllabusRoutes } from './modules/syllabus/syllabus.routes';
 import { teachingRoutes } from './modules/teaching/teaching.routes';
 import { usersRoutes } from './modules/users/users.routes';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export function createApp(): Express {
   const app = express();
@@ -50,21 +46,25 @@ export function createApp(): Express {
   ]) {
     app.use('/api', router);
   }
-  let distPath = path.resolve(__dirname, '../../apps/web/dist');
+  const distPath = path.resolve(process.cwd(), 'apps/web/dist');
 
-  if (!fs.existsSync(distPath)) {
-    // Fallback for compiled production environment in Render root
-    distPath = path.resolve(__dirname, '../../../web/dist');
-  }
-  if (fs.existsSync(distPath)) {
-    app.use(express.static(distPath));
-    app.get('/', (_req, res) => {
-      res.sendFile(path.resolve(distPath, 'index.html'));
-    });
-    app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(distPath, 'index.html'));
-    });
-  }
+  console.log("Checking frontend dist path at:", distPath);
+  console.log("Does path exist?:", fs.existsSync(distPath));
+
+  const finalDistPath = fs.existsSync(distPath)
+    ? distPath
+    : path.resolve(process.cwd(), 'web/dist');
+
+  app.use(express.static(finalDistPath));
+
+  app.get('*', (_req, res) => {
+    const indexPath = path.join(finalDistPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: { code: "NOT_FOUND", message: "Frontend build files missing" } });
+    }
+  });
   app.use(notFoundHandler);
   app.use(errorHandler);
   return app;
