@@ -46,18 +46,25 @@ export function createApp(): Express {
   ]) {
     app.use('/api', router);
   }
+  // --- Cleaned Static Asset Serving Logic ---
   const distPath = path.resolve(process.cwd(), 'apps/web/dist');
-
-  console.log("Checking frontend dist path at:", distPath);
-  console.log("Does path exist?:", fs.existsSync(distPath));
-
   const finalDistPath = fs.existsSync(distPath)
     ? distPath
     : path.resolve(process.cwd(), 'web/dist');
 
+  console.log("Checking frontend dist path at:", finalDistPath);
+  console.log("Does path exist?:", fs.existsSync(finalDistPath));
+
+  // Serve static assets from frontend
   app.use(express.static(finalDistPath));
 
-  app.get('*', (_req, res) => {
+  // Catch-all route to serve index.html for React router
+  app.get('*', (req, res, next) => {
+    // If the request starts with /api, pass it to error handlers, do not serve HTML
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+
     const indexPath = path.join(finalDistPath, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
@@ -65,7 +72,10 @@ export function createApp(): Express {
       res.status(404).json({ error: { code: "NOT_FOUND", message: "Frontend build files missing" } });
     }
   });
+
+  // Global Error Handlers (Keep these at the very bottom)
   app.use(notFoundHandler);
   app.use(errorHandler);
+
   return app;
 }
