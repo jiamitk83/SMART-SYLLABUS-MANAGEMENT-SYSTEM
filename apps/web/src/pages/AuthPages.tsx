@@ -31,7 +31,7 @@ export function LoginPage() {
   const onSubmit = handleSubmit(async (v) => {
     setError('');
     try {
-      const r = await api.post<{ accessToken: string; user: AuthUser }>('/auth/login', v);
+      const r = await api.post<{ accessToken: string; user: AuthUser }>('/api/auth/login', v);
       setSession(r.data.user, r.data.accessToken);
     } catch (e) {
       setError(errorMessage(e));
@@ -61,7 +61,7 @@ export function ForgotPasswordPage() {
   const onSubmit = handleSubmit(async (v) => {
     setError('');
     try {
-      const r = await api.post<{ message: string }>('/auth/forgot-password', v);
+      const r = await api.post<{ message: string }>('/api/auth/forgot-password', v);
       setDone(r.data.message);
     } catch (e) {
       setError(errorMessage(e));
@@ -93,7 +93,7 @@ export function ResetPasswordPage() {
   const onSubmit = handleSubmit(async (v) => {
     setError('');
     try {
-      await api.post('/auth/reset-password', v);
+      await api.post('/api/auth/reset-password', v);
       navigate('/login');
     } catch (e) {
       setError(errorMessage(e));

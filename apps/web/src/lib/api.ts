@@ -13,7 +13,7 @@ let refreshing: Promise<string | null> | null = null;
 
 export async function refreshSession(): Promise<string | null> {
   refreshing ??= api
-    .post<{ accessToken: string; user: AuthUser }>('/auth/refresh', undefined, { _skipRefresh: true } as object)
+    .post<{ accessToken: string; user: AuthUser }>('/api/auth/refresh', undefined, { _skipRefresh: true } as object)
     .then((r) => {
       useAuth.getState().setSession(r.data.user, r.data.accessToken);
       return r.data.accessToken;
@@ -34,7 +34,7 @@ api.interceptors.response.use(
   (r) => r,
   async (error: AxiosError) => {
     const cfg = error.config as Retryable | undefined;
-    const isAuthCall = cfg?.url?.startsWith('/auth/login') || cfg?.url?.startsWith('/auth/refresh');
+    const isAuthCall = cfg?.url?.startsWith('/api/auth/login') || cfg?.url?.startsWith('/api/auth/refresh');
     if (error.response?.status === 401 && cfg && !cfg._retried && !cfg._skipRefresh && !isAuthCall) {
       cfg._retried = true;
       const token = await refreshSession();
