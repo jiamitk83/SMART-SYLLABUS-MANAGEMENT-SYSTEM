@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { type Express } from 'express';
+import fs from 'node:fs';
 import helmet from 'helmet';
 import path from 'node:path';
 import { env } from './config/env';
@@ -45,9 +46,12 @@ export function createApp(): Express {
   ]) {
     app.use('/api', router);
   }
-  if (env.isProd) {
-    const distPath = path.resolve(__dirname, '../../apps/web/dist');
+  const distPath = path.resolve(__dirname, '../../apps/web/dist');
+  if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
+    app.get('/', (_req, res) => {
+      res.sendFile(path.resolve(distPath, 'index.html'));
+    });
     app.get('*', (_req, res) => {
       res.sendFile(path.resolve(distPath, 'index.html'));
     });

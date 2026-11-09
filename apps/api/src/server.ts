@@ -8,7 +8,8 @@ async function main(): Promise<void> {
   await connectDb();
   await ensureRoles();
   const app = createApp();
-  const server = app.listen(env.PORT, () => console.log(`SSMS API listening on :${env.PORT} (db: ${dbName()})`));
+  const port = process.env.PORT || 3000;
+  const server = app.listen(port, () => console.log(`SSMS API listening on :${port} (db: ${dbName()})`));
 
   const timer = setInterval(() => {
     generateReminders().catch((err) => console.error('Reminder job failed', err));
