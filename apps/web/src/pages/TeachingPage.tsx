@@ -39,7 +39,7 @@ export function TeachingPage() {
 
   const save = useMutation({
     mutationFn: (submit: boolean) =>
-      api.post('/teaching-records', { date, section: p.section, subject: p.subject, chapter: p.chapter, topic: topic || undefined, subtopic: subtopic || undefined, periodNumber: Number(period), description, teachingStatus: status, remarks, submit, teacher: canChooseTeacher && teacherId ? teacherId : undefined }),
+      api.post('/api/teaching-records', { date, section: p.section, subject: p.subject, chapter: p.chapter, topic: topic || undefined, subtopic: subtopic || undefined, periodNumber: Number(period), description, teachingStatus: status, remarks, submit, teacher: canChooseTeacher && teacherId ? teacherId : undefined }),
     onSuccess: (_r, submit) => {
       setMsg(submit ? 'Teaching entry submitted.' : 'Draft saved.');
       setDescription('');
@@ -51,7 +51,7 @@ export function TeachingPage() {
     },
   });
   const act = useMutation({
-    mutationFn: ({ id, kind }: { id: string; kind: 'submit' | 'delete' }) => (kind === 'submit' ? api.post(`/teaching-records/${id}/submit`) : api.delete(`/teaching-records/${id}`)),
+    mutationFn: ({ id, kind }: { id: string; kind: 'submit' | 'delete' }) => (kind === 'submit' ? api.post(`/api/teaching-records/${id}/submit`) : api.delete(`/api/teaching-records/${id}`)),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['teaching'] }); void qc.invalidateQueries({ queryKey: ['dashboard'] }); void qc.invalidateQueries({ queryKey: ['progress'] }); },
   });
 

@@ -24,11 +24,11 @@ function ItemModal({ target, base, onClose }: { target: Target; base: { class: s
       const body: Record<string, unknown> = { title: title.trim() };
       if (target.kind !== 'subtopics' && periods !== '') body.estimatedPeriods = Number(periods);
       if (target.kind === 'chapters') body.importance = importance;
-      if (it) return api.patch(`/${target.kind}/${it.id}`, body);
+      if (it) return api.patch(`/api/${target.kind}/${it.id}`, body);
       if (target.kind === 'chapters') Object.assign(body, base);
       if (target.kind === 'topics') body.chapter = target.parent;
       if (target.kind === 'subtopics') body.topic = target.parent;
-      return api.post(`/${target.kind}`, body);
+      return api.post(`/api/${target.kind}`, body);
     },
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['tree'] }); onClose(); },
   });
@@ -97,19 +97,19 @@ export function SyllabusPage() {
   const tree = useQuery({ queryKey: ['tree', base], enabled: ready, queryFn: async () => (await api.get<{ data: Chapter[] }>('/syllabus/tree', { params: base })).data.data });
   const versions = useQuery({ queryKey: ['tree', 'versions', base], enabled: ready && showVersions, queryFn: async () => (await api.get<{ data: Array<{ _id: string; version: number; note?: string; createdAt: string; changedBy?: unknown }> }>('/syllabus/versions', { params: base })).data.data });
   const toggle = useMutation({
-    mutationFn: ({ kind, id, on }: { kind: string; id: string; on: boolean }) => api.patch(`/${kind}/${id}/active`, { isActive: on }),
+    mutationFn: ({ kind, id, on }: { kind: string; id: string; on: boolean }) => api.patch(`/api/${kind}/${id}/active`, { isActive: on }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tree'] }),
   });
   const reorder = useMutation({
-    mutationFn: (ids: string[]) => api.post('/chapters/reorder', { ids }),
+    mutationFn: (ids: string[]) => api.post('/api/chapters/reorder', { ids }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tree'] }),
   });
   const copy = useMutation({
-    mutationFn: () => api.post('/syllabus/copy', { fromSession: copyFrom, toSession: sessionId, class: undefined, subject: undefined }),
+    mutationFn: () => api.post('/api/syllabus/copy', { fromSession: copyFrom, toSession: sessionId, class: undefined, subject: undefined }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tree'] }),
   });
   const exportJson = async () => {
-    const r = await api.get('/syllabus/export', { params: base, responseType: 'blob' });
+    const r = await api.get('/api/syllabus/export', { params: base, responseType: 'blob' });
     downloadBlob(r.data as Blob, 'syllabus.json');
   };
   const move = (i: number, d: number) => {

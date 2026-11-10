@@ -33,7 +33,7 @@ function ActivityEditor({ unit, section, onClose }: { unit: Unit; section: strin
   const changed = ACTIVITY_TYPES.filter((t) => t !== 'TEACHING' && rows[t] !== activityStatusOf(current(t)));
   const save = useMutation({
     mutationFn: async () => {
-      for (const t of changed) await api.put('/activities', { section, chapter: unit.chapter, activityType: t, status: rows[t], reason: reason.trim() });
+      for (const t of changed) await api.put('/api/activities', { section, chapter: unit.chapter, activityType: t, status: rows[t], reason: reason.trim() });
     },
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['progress'] }); void qc.invalidateQueries({ queryKey: ['dashboard'] }); void qc.invalidateQueries({ queryKey: ['activity-history'] }); onClose(); },
   });
@@ -87,7 +87,7 @@ const fmtVal = statusText;
 function HistoryModal({ unit, onClose }: { unit: Unit; onClose: () => void }) {
   const q = useQuery({
     queryKey: ['activity-history', unit.section, unit.chapter],
-    queryFn: async () => (await api.get<{ data: HistoryRow[] }>('/activities/history', { params: { section: unit.section, chapter: unit.chapter } })).data.data,
+    queryFn: async () => (await api.get<{ data: HistoryRow[] }>('/api/activities/history', { params: { section: unit.section, chapter: unit.chapter } })).data.data,
   });
   return (
     <Modal title={`Correction history — ${unit.chapterTitle}`} onClose={onClose}>
@@ -116,7 +116,7 @@ export function ProgressPage() {
   const q = useQuery({
     queryKey: ['progress', params],
     enabled: !!p.scope.current,
-    queryFn: async () => (await api.get<{ data: Unit[]; summary: Summary }>('/progress/chapters', { params })).data,
+    queryFn: async () => (await api.get<{ data: Unit[]; summary: Summary }>('/api/progress/chapters', { params })).data,
   });
   const canEdit = can('activities:manage');
   return (

@@ -25,7 +25,7 @@ function CreateUser({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient();
   const { register, handleSubmit, formState } = useForm<CreateForm>({ resolver: zodResolver(createSchema), defaultValues: { role: 'TEACHER' } });
   const m = useMutation({
-    mutationFn: (v: CreateForm) => api.post('/users', { ...v, username: v.username.toLowerCase(), employeeCode: v.employeeCode || undefined, phone: v.phone || undefined, mustChangePassword: true }),
+    mutationFn: (v: CreateForm) => api.post('/api/users', { ...v, username: v.username.toLowerCase(), employeeCode: v.employeeCode || undefined, phone: v.phone || undefined, mustChangePassword: true }),
     onSuccess: () => { void qc.invalidateQueries(); onClose(); },
   });
   return (
@@ -53,7 +53,7 @@ function CreateUser({ onClose }: { onClose: () => void }) {
 function ResetPassword({ user, onClose }: { user: UserRow; onClose: () => void }) {
   const [pw, setPw] = useState('');
   const check = passwordSchema.safeParse(pw);
-  const m = useMutation({ mutationFn: () => api.post(`/users/${user.id}/reset-password`, { password: pw }), onSuccess: onClose });
+  const m = useMutation({ mutationFn: () => api.post(`/api/users/${user.id}/reset-password`, { password: pw }), onSuccess: onClose });
   return (
     <Modal title={`Reset password — ${user.fullName}`} onClose={onClose}>
       <div className="space-y-3">
@@ -74,11 +74,11 @@ export function UsersPage() {
   const [resetting, setResetting] = useState<UserRow | null>(null);
   const list = useList<UserRow>('users', '/users', { page, pageSize: 20, q, role });
   const toggle = useMutation({
-    mutationFn: (u: UserRow) => api.patch(`/users/${u.id}/active`, { isActive: !u.isActive }),
+    mutationFn: (u: UserRow) => api.patch(`/api/users/${u.id}/active`, { isActive: !u.isActive }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
   const changeRole = useMutation({
-    mutationFn: ({ u, r }: { u: UserRow; r: string }) => api.patch(`/users/${u.id}`, { role: r }),
+    mutationFn: ({ u, r }: { u: UserRow; r: string }) => api.patch(`/api/users/${u.id}`, { role: r }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
   return (
@@ -122,7 +122,7 @@ export function RolesPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['roles'], queryFn: async () => (await api.get<{ data: RoleDoc[]; allPermissions: string[] }>('/roles')).data });
   const [edits, setEdits] = useState<Record<string, string[]>>({});
   const save = useMutation({
-    mutationFn: ({ name, permissions }: { name: string; permissions: string[] }) => api.patch(`/roles/${name}`, { permissions }),
+    mutationFn: ({ name, permissions }: { name: string; permissions: string[] }) => api.patch(`/api/roles/${name}`, { permissions }),
     onSuccess: (_r, v) => { setEdits((e) => { const n = { ...e }; delete n[v.name]; return n; }); void qc.invalidateQueries({ queryKey: ['roles'] }); },
   });
   if (isLoading) return <Spinner />;

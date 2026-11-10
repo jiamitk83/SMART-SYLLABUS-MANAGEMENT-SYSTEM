@@ -20,7 +20,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
   const [target, setTarget] = useState('');
   const [topics, setTopics] = useState<string[]>([]);
   const m = useMutation({
-    mutationFn: () => api.post('/plans', { chapter: p.chapter, section: p.section || undefined, level, topics, startDate: start, endDate: end, estimatedPeriods: periods ? Number(periods) : undefined, target }),
+    mutationFn: () => api.post('/api/plans', { chapter: p.chapter, section: p.section || undefined, level, topics, startDate: start, endDate: end, estimatedPeriods: periods ? Number(periods) : undefined, target }),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['plans'] }); onClose(); },
   });
   const tps = p.chapterObj?.topics.filter((t) => t.isActive) ?? [];
@@ -48,7 +48,7 @@ function RescheduleModal({ plan, onClose }: { plan: Plan; onClose: () => void })
   const [start, setStart] = useState(plan.startDate.slice(0, 10));
   const [end, setEnd] = useState(plan.endDate.slice(0, 10));
   const [reason, setReason] = useState('');
-  const m = useMutation({ mutationFn: () => api.post(`/plans/${plan._id}/reschedule`, { startDate: start, endDate: end, reason }), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['plans'] }); onClose(); } });
+  const m = useMutation({ mutationFn: () => api.post(`/api/plans/${plan._id}/reschedule`, { startDate: start, endDate: end, reason }), onSuccess: () => { void qc.invalidateQueries({ queryKey: ['plans'] }); onClose(); } });
   return (
     <Modal title="Reschedule plan" onClose={onClose}>
       <div className="space-y-3">
@@ -72,7 +72,7 @@ export function PlansPage() {
   const [creating, setCreating] = useState(false);
   const [resched, setResched] = useState<Plan | null>(null);
   const list = useList<Plan>('plans', '/plans', { academicSession: current?._id, level: level || undefined, withProgress: 'true', page, pageSize: view === 'table' ? 15 : 100 }, !!current);
-  const cancel = useMutation({ mutationFn: (id: string) => api.delete(`/plans/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['plans'] }) });
+  const cancel = useMutation({ mutationFn: (id: string) => api.delete(`/api/plans/${id}`), onSuccess: () => qc.invalidateQueries({ queryKey: ['plans'] }) });
   const manage = can('plans:manage');
   const rows = list.data?.data ?? [];
   const byMonth = rows.reduce<Record<string, Plan[]>>((acc, r) => { (acc[r.startDate.slice(0, 7)] ??= []).push(r); return acc; }, {});

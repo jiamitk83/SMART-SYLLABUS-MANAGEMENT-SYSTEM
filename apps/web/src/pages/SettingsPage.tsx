@@ -11,7 +11,7 @@ export function SettingsPage() {
   const [w, setW] = useState<Record<string, number>>({ ...DEFAULT_ACTIVITY_WEIGHTS });
   useEffect(() => { if (q.data) setW(q.data); }, [q.data]);
   const total = ACTIVITY_TYPES.reduce((s, t) => s + (Number(w[t]) || 0), 0);
-  const save = useMutation({ mutationFn: () => api.put('/settings/activity-weights', w), onSuccess: () => qc.invalidateQueries() });
+  const save = useMutation({ mutationFn: () => api.put('/api/settings/activity-weights', w), onSuccess: () => qc.invalidateQueries() });
   if (q.isLoading) return <Spinner />;
   return (
     <div className="max-w-xl space-y-4">

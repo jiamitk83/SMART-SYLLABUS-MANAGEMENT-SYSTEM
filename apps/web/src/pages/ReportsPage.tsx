@@ -39,12 +39,12 @@ export function ReportsPage() {
   const q = useQuery({
     queryKey: ['report', kind, run],
     enabled: !!run,
-    queryFn: async () => { const d = (await api.get(`/reports/${kind}`, { params: { ...run, format: 'json' } })).data as { data?: Table } & Table; return d.data ?? d; },
+    queryFn: async () => { const d = (await api.get(`/api/reports/${kind}`, { params: { ...run, format: 'json' } })).data as { data?: Table } & Table; return d.data ?? d; },
   });
   const download = async (format: 'xlsx' | 'pdf') => {
     setDlErr('');
     try {
-      const r = await api.get(`/reports/${kind}`, { params: { ...build(), format }, responseType: 'blob' });
+      const r = await api.get(`/api/reports/${kind}`, { params: { ...build(), format }, responseType: 'blob' });
       downloadBlob(r.data as Blob, `${kind}.${format}`);
     } catch (e) { setDlErr(errorMessage(e)); }
   };

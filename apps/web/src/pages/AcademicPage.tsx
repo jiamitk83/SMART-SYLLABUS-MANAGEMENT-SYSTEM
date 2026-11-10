@@ -27,7 +27,7 @@ export function AcademicPage() {
   const { classes, sections } = useClassesSections(sessionId);
   const subjects = useSubjects();
   const teachers = useTeachers();
-  const setCurrent = useMutation({ mutationFn: (id: string) => api.post(`/academic-sessions/${id}/set-current`), onSuccess: () => qc.invalidateQueries() });
+  const setCurrent = useMutation({ mutationFn: (id: string) => api.post(`/api/academic-sessions/${id}/set-current`), onSuccess: () => qc.invalidateQueries() });
   const withSession = { academicSession: sessionId };
   const nameOf = (list: Array<{ _id: string; name?: string }>, id: unknown) => list.find((x) => x._id === idOf(id))?.name ?? labelOf(id);
 
@@ -45,7 +45,7 @@ export function AcademicPage() {
 
       {tab === 'Sessions' && (
         <CrudTable<Session>
-          title="Academic session" path="/academic-sessions" canWrite={write} activeToggle={false} schema={sessionSchema}
+          title="Academic session" path="/api/academic-sessions" canWrite={write} activeToggle={false} schema={sessionSchema}
           fields={[{ name: 'name', label: 'Name (e.g. 2025-26)' }, { name: 'startDate', label: 'Start date', type: 'date' }, { name: 'endDate', label: 'End date', type: 'date' }]}
           toForm={(s) => ({ name: s.name, startDate: toInputDate(s.startDate), endDate: toInputDate(s.endDate) })}
           columns={[
@@ -58,7 +58,7 @@ export function AcademicPage() {
       )}
       {tab === 'Classes' && sessionId && (
         <CrudTable<Cls>
-          title="Class" path="/classes" params={withSession} canWrite={write} schema={classSchema} searchable
+          title="Class" path="/api/classes" params={withSession} canWrite={write} schema={classSchema} searchable
           fields={[{ name: 'name', label: 'Class name' }, { name: 'order', label: 'Display order', type: 'number' }]}
           toBody={(v) => ({ ...v, academicSession: sessionId })}
           columns={[{ header: 'Class', cell: (c) => c.name }, { header: 'Order', cell: (c) => c.order ?? '—' }, { header: 'Status', cell: (c) => <ActiveBadge on={c.isActive} /> }]}
@@ -66,7 +66,7 @@ export function AcademicPage() {
       )}
       {tab === 'Sections' && sessionId && (
         <CrudTable<Sec>
-          title="Section" path="/sections" params={withSession} canWrite={write} schema={sectionSchema} searchable
+          title="Section" path="/api/sections" params={withSession} canWrite={write} schema={sectionSchema} searchable
           fields={[{ name: 'class', label: 'Class', type: 'select', options: classes.map((c) => ({ value: c._id, label: c.name })), editable: false }, { name: 'name', label: 'Section name' }]}
           toForm={(s) => ({ class: idOf(s.class), name: s.name })}
           columns={[{ header: 'Class', cell: (s) => nameOf(classes, s.class) }, { header: 'Section', cell: (s) => s.name }, { header: 'Status', cell: (s) => <ActiveBadge on={s.isActive} /> }]}
@@ -74,14 +74,14 @@ export function AcademicPage() {
       )}
       {tab === 'Subjects' && (
         <CrudTable<Subj>
-          title="Subject" path="/subjects" canWrite={write} schema={subjectSchema} searchable
+          title="Subject" path="/api/subjects" canWrite={write} schema={subjectSchema} searchable
           fields={[{ name: 'name', label: 'Subject name' }, { name: 'code', label: 'Code' }]}
           columns={[{ header: 'Subject', cell: (s) => s.name }, { header: 'Code', cell: (s) => s.code }, { header: 'Status', cell: (s) => <ActiveBadge on={s.isActive} /> }]}
         />
       )}
       {tab === 'Teacher assignments' && sessionId && (
         <CrudTable<Assign & { _id: string }>
-          title="Teacher assignment" path="/teacher-assignments" params={withSession} canWrite={write} schema={assignSchema}
+          title="Teacher assignment" path="/api/teacher-assignments" params={withSession} canWrite={write} schema={assignSchema}
           fields={[
             { name: 'section', label: 'Section', type: 'select', options: sections.map((s) => ({ value: s._id, label: sectionLabel(s) })), editable: false },
             { name: 'subject', label: 'Subject', type: 'select', options: subjects.map((s) => ({ value: s._id, label: s.name })), editable: false },

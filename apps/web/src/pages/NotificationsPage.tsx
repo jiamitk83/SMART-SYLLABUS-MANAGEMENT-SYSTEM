@@ -14,7 +14,7 @@ function Announce({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [roles, setRoles] = useState<string[]>(['TEACHER']);
-  const m = useMutation({ mutationFn: () => api.post('/notifications/announce', { title, message, roles }), onSuccess: onClose });
+  const m = useMutation({ mutationFn: () => api.post('/api/notifications/announce', { title, message, roles }), onSuccess: onClose });
   return (
     <Modal title="Send announcement" onClose={onClose}>
       <div className="space-y-3">
@@ -36,9 +36,9 @@ export function NotificationsPage() {
   const [announce, setAnnounce] = useState(false);
   const list = useList<Note>('notifications', '/notifications', { page, pageSize: 15, unread: unread ? 'true' : undefined });
   const refresh = () => qc.invalidateQueries({ queryKey: ['notifications'] });
-  const readOne = useMutation({ mutationFn: (id: string) => api.post(`/notifications/${id}/read`), onSuccess: refresh });
-  const readAll = useMutation({ mutationFn: () => api.post('/notifications/read-all'), onSuccess: refresh });
-  const gen = useMutation({ mutationFn: () => api.post('/notifications/generate'), onSuccess: refresh });
+  const readOne = useMutation({ mutationFn: (id: string) => api.post(`/api/notifications/${id}/read`), onSuccess: refresh });
+  const readAll = useMutation({ mutationFn: () => api.post('/api/notifications/read-all'), onSuccess: refresh });
+  const gen = useMutation({ mutationFn: () => api.post('/api/notifications/generate'), onSuccess: refresh });
   return (
     <div className="space-y-4">
       <PageHeader title="Notifications" actions={

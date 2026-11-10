@@ -16,7 +16,7 @@ function RequestModal({ onClose, canDirect }: { onClose: () => void; canDirect: 
   const [remarks, setRemarks] = useState('');
   const [direct, setDirect] = useState(false);
   const m = useMutation({
-    mutationFn: () => api.post('/chapter-completions', { section: p.section, chapter: p.chapter, remarks: remarks || undefined, direct: direct || undefined }),
+    mutationFn: () => api.post('/api/chapter-completions', { section: p.section, chapter: p.chapter, remarks: remarks || undefined, direct: direct || undefined }),
     onSuccess: () => { void qc.invalidateQueries(); onClose(); },
   });
   return (
@@ -43,7 +43,7 @@ export function CompletionsPage() {
   const review = useMutation({
     mutationFn: ({ id, action }: { id: string; action: 'approve' | 'reject' | 'reopen' }) => {
       const remarks = action === 'approve' ? '' : window.prompt(`Remarks for ${action} (optional)`) ?? '';
-      return api.post(`/chapter-completions/${id}/${action}`, { remarks: remarks || undefined });
+      return api.post(`/api/chapter-completions/${id}/${action}`, { remarks: remarks || undefined });
     },
     onSuccess: () => qc.invalidateQueries(),
   });

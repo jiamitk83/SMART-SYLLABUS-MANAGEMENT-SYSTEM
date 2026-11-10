@@ -84,7 +84,7 @@ export function MarkAttendancePage() {
 
   const save = useMutation({
     mutationFn: async (p: { submit: boolean; reason?: string }) =>
-      api.put('/attendance/mark', {
+      api.put('/api/attendance/mark', {
         section: sel.sectionId,
         date,
         entries: Object.entries(local).map(([student, status]) => ({ student, status })),

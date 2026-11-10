@@ -27,23 +27,23 @@ export function useList<T>(key: string, path: string, params: Record<string, unk
 }
 
 export function useSessions() {
-  const q = useList<Session>('lookup', '/academic-sessions');
+  const q = useList<Session>('lookup', '/api/academic-sessions');
   const current = q.data?.data.find((s) => s.isCurrent) ?? q.data?.data[0];
   return { ...q, sessions: q.data?.data ?? [], current };
 }
 
 export function useSubjects() {
-  return useList<Subj>('lookup', '/subjects').data?.data ?? [];
+  return useList<Subj>('lookup', '/api/subjects').data?.data ?? [];
 }
 
 export function useClassesSections(sessionId?: string) {
-  const classes = useList<Cls>('lookup', '/classes', { academicSession: sessionId }, !!sessionId).data?.data ?? [];
-  const sections = useList<Sec>('lookup', '/sections', { academicSession: sessionId }, !!sessionId).data?.data ?? [];
+  const classes = useList<Cls>('lookup', '/api/classes', { academicSession: sessionId }, !!sessionId).data?.data ?? [];
+  const sections = useList<Sec>('lookup', '/api/sections', { academicSession: sessionId }, !!sessionId).data?.data ?? [];
   return { classes, sections };
 }
 
 export function useTeachers() {
-  return useList<UserRow>('lookup', '/teachers').data?.data ?? [];
+  return useList<UserRow>('lookup', '/api/teachers').data?.data ?? [];
 }
 
 export const sectionLabel = (s: Sec) => `${labelOf(s.class)}-${s.name}`;

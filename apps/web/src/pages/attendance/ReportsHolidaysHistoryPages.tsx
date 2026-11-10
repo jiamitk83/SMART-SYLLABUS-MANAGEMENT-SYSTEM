@@ -108,13 +108,13 @@ export function HolidaysPage() {
   const save = useMutation({
     mutationFn: async (h: NonNullable<typeof edit>) => {
       const body = { academicSession: sel.sessionId, date: h.date, name: h.name, description: h.description || undefined };
-      return h.id ? api.patch(`/attendance/holidays/${h.id}`, body) : api.post('/attendance/holidays', body);
+      return h.id ? api.patch(`/api/attendance/holidays/${h.id}`, body) : api.post('/api/attendance/holidays', body);
     },
     onSuccess: () => { setEdit(null); setErr(''); void qc.invalidateQueries({ queryKey: ['att-holidays'] }); },
     onError: (e) => setErr(errorMessage(e)),
   });
   const del = useMutation({
-    mutationFn: async (id: string) => api.delete(`/attendance/holidays/${id}`),
+    mutationFn: async (id: string) => api.delete(`/api/attendance/holidays/${id}`),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['att-holidays'] }),
     onError: (e) => setErr(errorMessage(e)),
   });
@@ -197,7 +197,7 @@ export function AttendanceHistoryPage() {
   });
   const state = regs.data?.[0]?.state;
   const lockOp = useMutation({
-    mutationFn: async (op: 'lock' | 'unlock') => api.post(`/attendance/registers/${op}`, { section: sel.sectionId, date, ...(op === 'unlock' ? { reason: reason.trim() } : {}) }),
+    mutationFn: async (op: 'lock' | 'unlock') => api.post(`/api/attendance/registers/${op}`, { section: sel.sectionId, date, ...(op === 'unlock' ? { reason: reason.trim() } : {}) }),
     onSuccess: (_d, op) => { setMsg({ tone: 'green', text: op === 'lock' ? 'Register locked.' : 'Register unlocked.' }); setReason(''); void qc.invalidateQueries(); },
     onError: (e) => setMsg({ tone: 'red', text: errorMessage(e) }),
   });

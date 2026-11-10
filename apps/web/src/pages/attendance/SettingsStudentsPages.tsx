@@ -14,7 +14,7 @@ export function AttendanceSettingsPage() {
   const [msg, setMsg] = useState<{ tone: 'red' | 'green'; text: string } | null>(null);
   useEffect(() => { if (q.data) setS(q.data); }, [q.data]);
   const save = useMutation({
-    mutationFn: async (v: Settings) => api.put('/attendance/settings', v),
+    mutationFn: async (v: Settings) => api.put('/api/attendance/settings', v),
     onSuccess: () => { setMsg({ tone: 'green', text: 'Settings saved.' }); void qc.invalidateQueries({ queryKey: ['att-settings'] }); },
     onError: (e) => setMsg({ tone: 'red', text: errorMessage(e) }),
   });
@@ -78,13 +78,13 @@ export function StudentsPage() {
   const save = useMutation({
     mutationFn: async (f: Form) => {
       const body = { rollNumber: f.rollNumber, name: f.name, gender: f.gender || undefined, guardianName: f.guardianName || undefined, guardianPhone: f.guardianPhone || undefined };
-      return f.id ? api.patch(`/attendance/students/${f.id}`, body) : api.post('/attendance/students', { section: sel.sectionId, admissionNumber: f.admissionNumber, ...body });
+      return f.id ? api.patch(`/api/attendance/students/${f.id}`, body) : api.post('/api/attendance/students', { section: sel.sectionId, admissionNumber: f.admissionNumber, ...body });
     },
     onSuccess: () => { setForm(null); setMsg(null); refresh(); },
     onError: (e) => setMsg({ tone: 'red', text: errorMessage(e) }),
   });
   const toggle = useMutation({
-    mutationFn: async (st: StudentRow) => api.patch(`/attendance/students/${st._id}`, { isActive: !st.isActive }),
+    mutationFn: async (st: StudentRow) => api.patch(`/api/attendance/students/${st._id}`, { isActive: !st.isActive }),
     onSuccess: refresh,
     onError: (e) => setMsg({ tone: 'red', text: errorMessage(e) }),
   });

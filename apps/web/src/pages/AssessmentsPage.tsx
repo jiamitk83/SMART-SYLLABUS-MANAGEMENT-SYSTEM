@@ -20,7 +20,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
   const [maxMarks, setMax] = useState('20');
   const [passMarks, setPass] = useState('8');
   const m = useMutation({
-    mutationFn: () => api.post('/assessments', { type, title, section: p.section, subject: p.subject, chapters: [p.chapter], date, maxMarks: Number(maxMarks), passMarks: Number(passMarks), status: 'PLANNED' }),
+    mutationFn: () => api.post('/api/assessments', { type, title, section: p.section, subject: p.subject, chapters: [p.chapter], date, maxMarks: Number(maxMarks), passMarks: Number(passMarks), status: 'PLANNED' }),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['assessments'] }); onClose(); },
   });
   return (
@@ -47,7 +47,7 @@ function ResultsModal({ id, canEdit, onClose }: { id: string; canEdit: boolean; 
   const [rows, setRows] = useState<Result[] | null>(null);
   const cur = rows ?? d.data?.results ?? [];
   const save = useMutation({
-    mutationFn: () => api.put(`/assessments/${id}/results`, { results: cur.filter((r) => r.rollNo.trim() && r.studentName.trim()).map((r) => ({ rollNo: r.rollNo.trim(), studentName: r.studentName.trim(), marksObtained: r.marksObtained ?? undefined, outcome: r.outcome || undefined })) }),
+    mutationFn: () => api.put(`/api/assessments/${id}/results`, { results: cur.filter((r) => r.rollNo.trim() && r.studentName.trim()).map((r) => ({ rollNo: r.rollNo.trim(), studentName: r.studentName.trim(), marksObtained: r.marksObtained ?? undefined, outcome: r.outcome || undefined })) }),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['assessments'] }); void qc.invalidateQueries({ queryKey: ['progress'] }); onClose(); },
   });
   const upd = (i: number, patch: Partial<Result>) => setRows(cur.map((r, k) => (k === i ? { ...r, ...patch } : r)));

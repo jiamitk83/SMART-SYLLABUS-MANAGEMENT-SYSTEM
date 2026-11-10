@@ -12,7 +12,7 @@ export function useScope() {
   const { current, sessions } = useSessions();
   const { sections } = useClassesSections(current?._id);
   const subjects = useSubjects();
-  const assignments = useList<Assign>('lookup', '/teacher-assignments', { academicSession: current?._id, isActive: 'true' }, !!current).data?.data ?? [];
+  const assignments = useList<Assign>('lookup', '/api/teacher-assignments', { academicSession: current?._id, isActive: 'true' }, !!current).data?.data ?? [];
   const isTeacher = user?.role === 'TEACHER';
   const mine = isTeacher ? assignments.filter((a) => idOf(a.teacher) === user?.id) : assignments;
   return { current, sessions, sections, subjects, assignments: mine, isTeacher };
@@ -37,7 +37,7 @@ export function useChapterPicker(opts: { restrictToAssignments?: boolean } = {})
   const tree = useQuery({
     queryKey: ['tree', 'picker', scope.current?._id, classId, subject],
     enabled: !!(scope.current && classId && subject),
-    queryFn: async () => (await api.get<{ data: TreeChapter[] }>('/syllabus/tree', { params: { academicSession: scope.current!._id, class: classId, subject } })).data.data,
+    queryFn: async () => (await api.get<{ data: TreeChapter[] }>('/api/syllabus/tree', { params: { academicSession: scope.current!._id, class: classId, subject } })).data.data,
   });
   useEffect(() => { setSubject(''); setChapter(''); }, [section]);
   useEffect(() => { setChapter(''); }, [subject]);

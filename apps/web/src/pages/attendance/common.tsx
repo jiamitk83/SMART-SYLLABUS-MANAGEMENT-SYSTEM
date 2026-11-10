@@ -90,6 +90,6 @@ export function useScopeSelection(initialSection = '') {
 
 export async function downloadReport(type: string, format: 'xlsx' | 'csv' | 'pdf', params: Record<string, unknown>, filename: string) {
   const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''));
-  const res = await api.get(`/attendance/reports/${type}`, { params: { ...clean, format }, responseType: 'blob' });
+  const res = await api.get(`/api/attendance/reports/${type}`, { params: { ...clean, format }, responseType: 'blob' });
   downloadBlob(res.data as Blob, `${filename}.${format}`);
 }

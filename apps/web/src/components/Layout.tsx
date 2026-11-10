@@ -45,7 +45,7 @@ export function Layout() {
   });
 
   const logout = async () => {
-    await api.post('/auth/logout').catch(() => undefined);
+    await api.post('/api/auth/logout').catch(() => undefined);
     setSession(null, null);
     navigate('/login');
   };
