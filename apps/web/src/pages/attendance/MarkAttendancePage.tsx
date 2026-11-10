@@ -21,7 +21,7 @@ export interface Sheet {
 export function useSheet(section: string, date: string, kind: 'sheet' | 'daily' = 'sheet') {
   return useQuery({
     queryKey: ['att-sheet', kind, section, date],
-    queryFn: async () => (await api.get<{ data: Sheet }>(`/attendance/${kind}`, { params: { section, date } })).data.data,
+    queryFn: async () => (await api.get<{ data: Sheet }>(`/api/attendance/${kind}`, { params: { section, date } })).data.data,
     enabled: !!section && !!date,
   });
 }
