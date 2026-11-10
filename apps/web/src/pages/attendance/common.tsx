@@ -41,7 +41,7 @@ export function useScopeSelection(initialSection = '') {
   const sessionId = session || current?._id || '';
   const scopeQ = useQuery({
     queryKey: ['att-scope', sessionId],
-    queryFn: async () => (await api.get<{ data: Scope }>('/attendance/scope', { params: { academicSession: sessionId } })).data.data,
+    queryFn: async () => (await api.get<{ data: Scope }>('/api/attendance/scope', { params: { academicSession: sessionId } })).data.data,
     enabled: !!sessionId,
   });
   const scope = scopeQ.data;

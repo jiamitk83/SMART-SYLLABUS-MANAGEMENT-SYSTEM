@@ -14,7 +14,7 @@ export function ClassAttendancePage() {
   const [err, setErr] = useState('');
   const q = useQuery({
     queryKey: ['att-class', sel.sessionId, sel.classId, from, to],
-    queryFn: async () => (await api.get<{ data: { from: string; to: string; threshold: number; rows: ClassRow[] } }>('/attendance/class', { params: { academicSession: sel.sessionId, class: sel.classId || undefined, from: from || undefined, to: to || undefined } })).data.data,
+    queryFn: async () => (await api.get<{ data: { from: string; to: string; threshold: number; rows: ClassRow[] } }>('/api/attendance/class', { params: { academicSession: sel.sessionId, class: sel.classId || undefined, from: from || undefined, to: to || undefined } })).data.data,
     enabled: !!sel.sessionId,
   });
   const d = q.data;
@@ -47,7 +47,7 @@ export function AttendanceDashboardPage() {
   const [date, setDate] = useState(todayStr());
   const q = useQuery({
     queryKey: ['att-dash', sel.sessionId, date],
-    queryFn: async () => (await api.get<{ data: Dash }>('/attendance/dashboard', { params: { academicSession: sel.sessionId, date } })).data.data,
+    queryFn: async () => (await api.get<{ data: Dash }>('/api/attendance/dashboard', { params: { academicSession: sel.sessionId, date } })).data.data,
     enabled: !!sel.sessionId,
   });
   const d = q.data;
