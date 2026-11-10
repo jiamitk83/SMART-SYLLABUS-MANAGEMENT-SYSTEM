@@ -56,7 +56,7 @@ function ImportModal({ base, onClose }: { base: { class: string; subject: string
     try {
       const parsed = JSON.parse(text) as { chapters?: unknown } | unknown[];
       const chapters = Array.isArray(parsed) ? parsed : parsed.chapters;
-      const r = await api.post<{ chaptersCreated: number; topicsCreated: number; subtopicsCreated: number }>('/syllabus/import', { ...base, chapters });
+      const r = await api.post<{ chaptersCreated: number; topicsCreated: number; subtopicsCreated: number }>('/api/syllabus/import', { ...base, chapters });
       setDone(`Created ${r.data.chaptersCreated} chapters, ${r.data.topicsCreated} topics, ${r.data.subtopicsCreated} subtopics.`);
       void qc.invalidateQueries({ queryKey: ['tree'] });
     } catch (e) {
@@ -94,8 +94,8 @@ export function SyllabusPage() {
   const base = { class: cls, subject, academicSession: sessionId };
   const ready = !!(cls && subject && sessionId);
 
-  const tree = useQuery({ queryKey: ['tree', base], enabled: ready, queryFn: async () => (await api.get<{ data: Chapter[] }>('/syllabus/tree', { params: base })).data.data });
-  const versions = useQuery({ queryKey: ['tree', 'versions', base], enabled: ready && showVersions, queryFn: async () => (await api.get<{ data: Array<{ _id: string; version: number; note?: string; createdAt: string; changedBy?: unknown }> }>('/syllabus/versions', { params: base })).data.data });
+  const tree = useQuery({ queryKey: ['tree', base], enabled: ready, queryFn: async () => (await api.get<{ data: Chapter[] }>('/api/syllabus/tree', { params: base })).data.data });
+  const versions = useQuery({ queryKey: ['tree', 'versions', base], enabled: ready && showVersions, queryFn: async () => (await api.get<{ data: Array<{ _id: string; version: number; note?: string; createdAt: string; changedBy?: unknown }> }>('/api/syllabus/versions', { params: base })).data.data });
   const toggle = useMutation({
     mutationFn: ({ kind, id, on }: { kind: string; id: string; on: boolean }) => api.patch(`/api/${kind}/${id}/active`, { isActive: on }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tree'] }),
