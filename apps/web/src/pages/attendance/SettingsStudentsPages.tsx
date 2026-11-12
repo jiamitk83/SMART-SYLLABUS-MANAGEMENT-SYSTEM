@@ -71,7 +71,7 @@ export function StudentsPage() {
   const [msg, setMsg] = useState<{ tone: 'red' | 'green'; text: string } | null>(null);
   const q = useQuery({
     queryKey: ['att-students', sel.sectionId, search],
-    queryFn: async () => (await api.get<{ data: StudentRow[] }>('/attendance/students', { params: { section: sel.sectionId, q: search || undefined, active: 'all', pageSize: 200 } })).data.data,
+    queryFn: async () => (await api.get<{ data: StudentRow[] }>('/api/attendance/students', { params: { section: sel.sectionId, q: search || undefined, active: 'all', pageSize: 200 } })).data.data,
     enabled: !!sel.sectionId,
   });
   const refresh = () => void qc.invalidateQueries({ queryKey: ['att-students'] });
@@ -94,7 +94,7 @@ export function StudentsPage() {
         const [rollNumber = '', admissionNumber = '', ...name] = l.split(',').map((x) => x.trim());
         return { rollNumber, admissionNumber, name: name.join(', ') };
       });
-      return (await api.post<{ data: { created: number; skipped: unknown[] } }>('/attendance/students/bulk', { section: sel.sectionId, students })).data.data;
+      return (await api.post<{ data: { created: number; skipped: unknown[] } }>('/api/attendance/students/bulk', { section: sel.sectionId, students })).data.data;
     },
     onSuccess: (r) => { setBulk(null); setMsg({ tone: 'green', text: `Added ${r.created} students; skipped ${r.skipped.length} duplicates/invalid.` }); refresh(); },
     onError: (e) => setMsg({ tone: 'red', text: errorMessage(e) }),
